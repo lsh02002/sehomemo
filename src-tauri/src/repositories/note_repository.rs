@@ -4,16 +4,31 @@ use crate::{errors::AppResult, models::note::{CreateNoteRequest, Note, UpdateNot
 use crate::errors::AppError;
 
 pub async fn create(pool: &SqlitePool, req: CreateNoteRequest) -> AppResult<Note> {
-    let note = sqlx::query_as::<_, Note>(
+    let note_id: i64 = sqlx::query_scalar(
         r#"
         INSERT INTO notes (title, content, folder_id)
         VALUES (?1, ?2, ?3)
-        RETURNING *
+        RETURNING id
         "#,
     )
     .bind(req.title)
     .bind(req.content)
     .bind(req.folder_id)
+    .fetch_one(pool)
+    .await?;
+
+    let note = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT
+            n.*,            
+            f.name AS folder_name            
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.id = ?
+        "#,
+    )
+    .bind(note_id)
     .fetch_one(pool)
     .await?;
 
