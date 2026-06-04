@@ -3,15 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 import { BackwardButton } from "../../components/BackwardButton";
 import SelectInput, { Option } from "../../components/SelectInput";
-
-export type FolderType = {
-  id: number;
-  name: string;
-  parent_id: number;
-  sort_order: number;
-  created_at: Date;
-  updated_at: Date;
-};
+import { FolderType } from "../../types/type";
 
 export default function NewNotePage() {
   const navigate = useNavigate();

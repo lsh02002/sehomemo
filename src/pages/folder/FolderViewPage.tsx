@@ -1,26 +1,14 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate, useParams } from "react-router-dom";
-
-type Folder = {
-  id: number;
-  name: string;
-};
-
-type Note = {
-  id: number;
-  title: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-};
+import { FolderType, NoteType } from "../../types/type";
 
 export default function FolderViewPage() {
   const navigate = useNavigate();
   const { folderId } = useParams();
 
-  const [folder, setFolder] = useState<Folder | null>(null);
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [folder, setFolder] = useState<FolderType | null>(null);
+  const [notes, setNotes] = useState<NoteType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,10 +19,10 @@ export default function FolderViewPage() {
         setLoading(true);
 
         const [folderResult, notesResult] = await Promise.all([
-          invoke<Folder>("get_folder", {
+          invoke<FolderType>("get_folder", {
             id: Number(folderId),
           }),
-          invoke<Note[]>("get_notes_by_folder", {
+          invoke<NoteType[]>("get_notes_by_folder", {
             folderId: Number(folderId),
           }),
         ]);

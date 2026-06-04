@@ -1,27 +1,18 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
-
-export type Note = {
-  id: number;
-  title: string;
-  folder_id: number;
-  folder_name: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-};
+import { NoteType } from "../../types/type";
 
 export default function NoteListPage() {
   const navigate = useNavigate();
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<NoteType[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchNotes = async () => {
     try {
       setLoading(true);
 
-      const result = await invoke<Note[]>("get_notes");
+      const result = await invoke<NoteType[]>("get_notes");
       setNotes(result);
     } catch (error) {
       console.error(error);

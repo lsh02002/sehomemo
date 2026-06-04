@@ -3,8 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackwardButton } from "../../components/BackwardButton";
 import SelectInput, { Option } from "../../components/SelectInput";
-import { FolderType } from "./NewNotePage";
-import { Note } from "./NoteListPage";
+import { FolderType, NoteType } from "../../types/type";
 
 export default function UpdateNotePage() {
   const navigate = useNavigate();
@@ -42,7 +41,7 @@ export default function UpdateNotePage() {
   useEffect(() => {
     const loadNote = async () => {
       try {
-        const note = await invoke<Note>("get_one_note", {
+        const note = await invoke<NoteType>("get_one_note", {
           id: Number(id),
         });
 
@@ -80,7 +79,7 @@ export default function UpdateNotePage() {
       navigate("/");
     } catch (error) {
       console.error(error);
-      alert("메모 수정 실패");
+      alert(error);
     } finally {
       setLoading(false);
     }

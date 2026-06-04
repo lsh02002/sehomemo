@@ -1,6 +1,7 @@
 use sqlx::SqlitePool;
 
 use crate::{errors::AppResult, models::note::{CreateNoteRequest, Note, UpdateNoteRequest}};
+use crate::errors::AppError;
 
 pub async fn create(pool: &SqlitePool, req: CreateNoteRequest) -> AppResult<Note> {
     let note = sqlx::query_as::<_, Note>(
@@ -100,6 +101,21 @@ pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note
     .bind(req.id)
     .fetch_one(pool)
     .await?;
+
+    let new_title = req.title.clone().unwrap_or(current.title.clone());
+    let new_content = req.content.clone().unwrap_or(current.content.clone());
+    let new_folder_id = req.folder_id.unwrap_or(current.folder_id);
+    let new_is_pinned = req.is_pinned.unwrap_or(current.is_pinned);
+    let new_is_archived = req.is_archived.unwrap_or(current.is_archived);
+
+    if current.title == new_title
+        && current.content == new_content
+        && current.folder_id == new_folder_id
+        && current.is_pinned == new_is_pinned
+        && current.is_archived == new_is_archived
+    {
+        return Err(AppError::Message("변경된 내용이 없습니다.".into()));
+    }
 
     sqlx::query(
         r#"
