@@ -3,6 +3,8 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import NewNotePage from "./pages/note/NewNotePage";
 import NoteListPage from "./pages/note/NoteListPage";
 import UpdateNotePage from "./pages/note/UpdateNotePage";
+import FolderViewPage from "./pages/folder/FolderViewPage";
+import NewFolderPage from "./pages/folder/NewFolderPage";
 
 function App() {
   return (
@@ -11,6 +13,8 @@ function App() {
         <Route path="/" element={<NoteListPage />} />
         <Route path="/create" element={<NewNotePage />} />
         <Route path="/update/:id" element={<UpdateNotePage />} />
+        <Route path="/folder/create" element={<NewFolderPage />} />
+        <Route path="/folder/:folderId" element={<FolderViewPage />} />
       </Routes>
     </HashRouter>
   );

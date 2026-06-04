@@ -2,20 +2,42 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackwardButton } from "../../components/BackwardButton";
-
-type Note = {
-  id: number;
-  title: string;
-  content: string;
-};
+import SelectInput, { Option } from "../../components/SelectInput";
+import { FolderType } from "./NewNotePage";
+import { Note } from "./NoteListPage";
 
 export default function UpdateNotePage() {
   const navigate = useNavigate();
   const { id } = useParams();
 
   const [title, setTitle] = useState("");
+  const [folderId, setFolderId] = useState("");
+  const [folderOptions, setFolderOptions] = useState<Option[]>([]);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const fetchFolders = async () => {
+    try {
+      setLoading(true);
+
+      const result = await invoke<FolderType[]>("get_folders");
+      setFolderOptions(
+        result?.map((folder) => ({
+          label: folder.name,
+          value: String(folder.id),
+        })),
+      );
+    } catch (error) {
+      console.error(error);
+      alert("메모 목록을 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFolders();
+  }, []);
 
   useEffect(() => {
     const loadNote = async () => {
@@ -25,6 +47,7 @@ export default function UpdateNotePage() {
         });
 
         setTitle(note.title);
+        setFolderId(String(note.folder_id));
         setContent(note.content);
       } catch (error) {
         console.error(error);
@@ -49,6 +72,7 @@ export default function UpdateNotePage() {
         req: {
           id: Number(id),
           title,
+          folder_id: Number(folderId),
           content,
         },
       });
@@ -77,6 +101,14 @@ export default function UpdateNotePage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="form-control form-control-lg bg-dark text-light border-secondary"
+          />
+
+          <SelectInput
+            name="folder"
+            title="폴더"
+            value={folderId}
+            setValue={setFolderId}
+            options={folderOptions}
           />
 
           <textarea

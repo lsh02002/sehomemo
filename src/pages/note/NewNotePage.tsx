@@ -1,13 +1,48 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 import { BackwardButton } from "../../components/BackwardButton";
+import SelectInput, { Option } from "../../components/SelectInput";
+
+export type FolderType = {
+  id: number;
+  name: string;
+  parent_id: number;
+  sort_order: number;
+  created_at: Date;
+  updated_at: Date;
+};
 
 export default function NewNotePage() {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
+  const [folderId, setFolderId] = useState("");
+  const [folderOptions, setFolderOptions] = useState<Option[]>([]);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const fetchFolders = async () => {
+    try {
+      setLoading(true);
+
+      const result = await invoke<FolderType[]>("get_folders");
+      setFolderOptions(
+        result?.map((folder) => ({
+          label: folder.name,
+          value: String(folder.id),
+        })),
+      );
+    } catch (error) {
+      console.error(error);
+      alert("메모 목록을 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFolders();
+  }, []);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -21,6 +56,7 @@ export default function NewNotePage() {
       await invoke("create_note", {
         req: {
           title,
+          folder_id: folderId,
           content,
         },
       });
@@ -57,6 +93,13 @@ export default function NewNotePage() {
             className="form-control form-control-lg bg-dark text-light border-secondary"
           />
 
+          <SelectInput
+            name="folder"
+            title="폴더"
+            value={folderId}
+            setValue={setFolderId}
+            options={folderOptions}
+          />
           {/* Content */}
           <textarea
             placeholder="메모를 입력하세요..."

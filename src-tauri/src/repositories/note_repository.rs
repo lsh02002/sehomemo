@@ -22,11 +22,44 @@ pub async fn create(pool: &SqlitePool, req: CreateNoteRequest) -> AppResult<Note
 pub async fn find_all(pool: &SqlitePool) -> AppResult<Vec<Note>> {
     let notes = sqlx::query_as::<_, Note>(
         r#"
-        SELECT * FROM notes
-        WHERE is_deleted = 0
-        ORDER BY is_pinned DESC, updated_at DESC
+        SELECT
+            n.*,
+            f.name AS folder_name
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.is_deleted = 0
+        ORDER BY
+            n.is_pinned DESC,
+            n.updated_at DESC
         "#,
     )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(notes)
+}
+
+pub async fn find_by_folder_id(
+    pool: &SqlitePool,
+    folder_id: i64,
+) -> AppResult<Vec<Note>> {
+    let notes = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT
+            n.*,            
+            f.name AS folder_name            
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.folder_id = ?
+          AND n.is_deleted = 0
+        ORDER BY
+            n.is_pinned DESC,
+            n.updated_at DESC
+        "#
+    )
+    .bind(folder_id)
     .fetch_all(pool)
     .await?;
 
@@ -36,8 +69,13 @@ pub async fn find_all(pool: &SqlitePool) -> AppResult<Vec<Note>> {
 pub async fn find_one(pool: &SqlitePool, id: i64) -> AppResult<Note> {
     let note = sqlx::query_as::<_, Note>(
         r#"
-        SELECT * FROM notes
-        WHERE id = ?
+        SELECT
+            n.*,            
+            f.name AS folder_name            
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.id = ?
         "#
     )
     .bind(id)
@@ -48,12 +86,22 @@ pub async fn find_one(pool: &SqlitePool, id: i64) -> AppResult<Note> {
 }
 
 pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note> {
-    let current = sqlx::query_as::<_, Note>("SELECT * FROM notes WHERE id = ?1 AND is_deleted = 0")
-        .bind(req.id)
-        .fetch_one(pool)
-        .await?;
+    let current = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT
+            n.*,            
+            f.name AS folder_name            
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.id = ?
+        "#,
+    )
+    .bind(req.id)
+    .fetch_one(pool)
+    .await?;
 
-    let note = sqlx::query_as::<_, Note>(
+    sqlx::query(
         r#"
         UPDATE notes
         SET title = ?1,
@@ -63,21 +111,34 @@ pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note
             is_archived = ?5,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?6
-        RETURNING *
         "#,
     )
     .bind(req.title.unwrap_or(current.title))
     .bind(req.content.unwrap_or(current.content))
-    .bind(req.folder_id.or(current.folder_id))
+    .bind(req.folder_id.unwrap_or(current.folder_id))
     .bind(req.is_pinned.unwrap_or(current.is_pinned))
     .bind(req.is_archived.unwrap_or(current.is_archived))
+    .bind(req.id)
+    .execute(pool)
+    .await?;
+
+    let note = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT
+            n.*,            
+            f.name AS folder_name            
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.id = ?
+        "#,
+    )
     .bind(req.id)
     .fetch_one(pool)
     .await?;
 
     Ok(note)
 }
-
 pub async fn soft_delete(pool: &SqlitePool, id: i64) -> AppResult<()> {
     sqlx::query(
         r#"

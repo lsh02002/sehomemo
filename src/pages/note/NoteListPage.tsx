@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 
-type Note = {
+export type Note = {
   id: number;
   title: string;
+  folder_id: number;
+  folder_name: string;
   content: string;
   created_at: string;
   updated_at: string;
@@ -51,14 +53,24 @@ export default function NoteListPage() {
       <header className="d-flex align-items-center justify-content-between border-bottom border-secondary px-4 py-3">
         <h1 className="h4 fw-bold mb-0">메모 목록</h1>
 
-        <button
-          onClick={() => {
-            navigate("/create");
-          }}
-          className="btn btn-primary"
-        >
-          새 메모
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            onClick={() => {
+              navigate("/create");
+            }}
+            className="btn btn-primary"
+          >
+            새 메모
+          </button>
+          <button
+            onClick={() => {
+              navigate("/folder/create");
+            }}
+            className="btn btn-primary"
+          >
+            새 폴더
+          </button>
+        </div>
       </header>
 
       <main className="flex-grow-1 overflow-auto p-4">
@@ -84,6 +96,10 @@ export default function NoteListPage() {
                         <h2 className="h5 fw-semibold text-truncate mb-2">
                           {note.title || "제목 없음"}
                         </h2>
+
+                        <p className="text-secondary small mb-2">
+                          {note.folder_name || "폴더 없음"}
+                        </p>
 
                         <p className="text-secondary small mb-2">
                           {note.content || "내용 없음"}
