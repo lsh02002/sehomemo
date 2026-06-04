@@ -33,6 +33,20 @@ pub async fn find_all(pool: &SqlitePool) -> AppResult<Vec<Note>> {
     Ok(notes)
 }
 
+pub async fn find_one(pool: &SqlitePool, id: i64) -> AppResult<Note> {
+    let note = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT * FROM notes
+        WHERE id = ?
+        "#
+    )
+    .bind(id)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(note)
+}
+
 pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note> {
     let current = sqlx::query_as::<_, Note>("SELECT * FROM notes WHERE id = ?1 AND is_deleted = 0")
         .bind(req.id)

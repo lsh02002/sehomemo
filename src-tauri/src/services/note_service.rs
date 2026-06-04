@@ -10,6 +10,10 @@ pub async fn get_notes(pool: &SqlitePool) -> AppResult<Vec<Note>> {
     note_repository::find_all(pool).await
 }
 
+pub async fn get_one_note(pool: &SqlitePool, id: i64) -> AppResult<Note> {
+    note_repository::find_one(pool, id).await
+}
+
 pub async fn update_note(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note> {
     note_repository::update(pool, req).await
 }

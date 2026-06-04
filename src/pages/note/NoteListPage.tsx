@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useNavigate } from "react-router-dom";
 
 type Note = {
   id: number;
@@ -10,6 +11,7 @@ type Note = {
 };
 
 export default function NoteListPage() {
+  const navigate = useNavigate();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +53,7 @@ export default function NoteListPage() {
 
         <button
           onClick={() => {
-            window.location.href = "/create";
+            navigate("/create");
           }}
           className="btn btn-primary"
         >
@@ -75,7 +77,7 @@ export default function NoteListPage() {
                     <div className="d-flex align-items-start justify-content-between gap-3">
                       <button
                         onClick={() => {
-                          window.location.href = `/notes/${note.id}`;
+                          navigate(`/update/${note.id}`);
                         }}
                         className="btn text-start text-white flex-grow-1 p-0 border-0"
                       >

@@ -1,15 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { BackwardButton } from "../../components/BackwardButton";
 
-export default function NewNotePage() {
+type Note = {
+  id: number;
+  title: string;
+  content: string;
+};
+
+export default function UpdateNotePage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSave = async () => {
+  useEffect(() => {
+    const loadNote = async () => {
+      try {
+        const note = await invoke<Note>("get_one_note", {
+          id: Number(id),
+        });
+
+        setTitle(note.title);
+        setContent(note.content);
+      } catch (error) {
+        console.error(error);
+        alert("메모 불러오기 실패");
+        navigate("/");
+      }
+    };
+
+    loadNote();
+  }, [id, navigate]);
+
+  const handleUpdate = async () => {
     if (!title.trim()) {
       alert("제목을 입력해주세요.");
       return;
@@ -18,20 +45,18 @@ export default function NewNotePage() {
     try {
       setLoading(true);
 
-      await invoke("create_note", {
+      await invoke("update_note", {
         req: {
+          id: Number(id),
           title,
           content,
         },
       });
 
-      setTitle("");
-      setContent("");
-
       navigate("/");
     } catch (error) {
       console.error(error);
-      alert("메모 저장 실패");
+      alert("메모 수정 실패");
     } finally {
       setLoading(false);
     }
@@ -40,15 +65,12 @@ export default function NewNotePage() {
   return (
     <div className="bg-dark text-light min-vh-100 d-flex flex-column">
       <BackwardButton />
-      {/* Header */}
       <header className="border-bottom border-secondary px-4 py-3">
-        <h1 className="h3 m-0">새 메모</h1>
+        <h1 className="h3 m-0">메모 수정</h1>
       </header>
 
-      {/* Main */}
       <main className="container-fluid flex-grow-1 py-4">
         <div className="d-flex flex-column h-100 gap-3">
-          {/* Title */}
           <input
             type="text"
             placeholder="제목 입력"
@@ -57,7 +79,6 @@ export default function NewNotePage() {
             className="form-control form-control-lg bg-dark text-light border-secondary"
           />
 
-          {/* Content */}
           <textarea
             placeholder="메모를 입력하세요..."
             value={content}
@@ -69,14 +90,14 @@ export default function NewNotePage() {
             }}
           />
 
-          {/* Footer */}
           <div className="d-flex justify-content-end">
             <button
-              onClick={handleSave}
+              type="button"
+              onClick={handleUpdate}
               disabled={loading}
               className="btn btn-primary px-4"
             >
-              {loading ? "저장 중..." : "저장"}
+              {loading ? "수정 중..." : "수정"}
             </button>
           </div>
         </div>

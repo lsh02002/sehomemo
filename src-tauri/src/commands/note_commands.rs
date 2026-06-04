@@ -13,6 +13,11 @@ pub async fn get_notes(state: State<'_, AppState>) -> AppResult<Vec<Note>> {
 }
 
 #[tauri::command]
+pub async fn get_one_note(state: State<'_, AppState>, id: i64) -> AppResult<Note> {
+    note_service::get_one_note(&state.pool, id).await
+}
+
+#[tauri::command]
 pub async fn update_note(state: State<'_, AppState>, req: UpdateNoteRequest) -> AppResult<Note> {
     note_service::update_note(&state.pool, req).await
 }
