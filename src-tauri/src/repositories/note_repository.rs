@@ -83,7 +83,7 @@ pub async fn find_by_keyword(pool: &SqlitePool, keyword: String) -> AppResult<Ve
     .fetch_all(pool)
     .await?;
 
-    Ok(notes)    
+    Ok(notes)
 }
 
 pub async fn find_deleted_all(pool: &SqlitePool) -> AppResult<Vec<Note>> {

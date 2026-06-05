@@ -10,6 +10,10 @@ pub async fn get_notes(pool: &SqlitePool) -> AppResult<Vec<Note>> {
     note_repository::find_all(pool).await
 }
 
+pub async fn get_notes_by_folder_id(pool: &SqlitePool, id: i64) -> AppResult<Vec<Note>> {
+    note_repository::find_by_folder_id(pool, id).await
+}
+
 pub async fn get_notes_by_keyword(pool: &SqlitePool, keyword: String) -> AppResult<Vec<Note>> {
     note_repository::find_by_keyword(pool, keyword).await
 }

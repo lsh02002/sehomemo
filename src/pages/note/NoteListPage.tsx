@@ -3,12 +3,24 @@ import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 import { NoteType } from "../../types/type";
 
+type FolderType = {
+  id: number;
+  name: string;
+};
+
 export default function NoteListPage() {
   const navigate = useNavigate();
 
   const [keyword, setKeyword] = useState("");
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
+  const [folders, setFolders] = useState<FolderType[]>([]);
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const fetchFolders = async () => {
+    const result = await invoke<FolderType[]>("get_folders");
+    setFolders(result);
+  };
 
   const fetchNotes = async () => {
     try {
@@ -16,12 +28,20 @@ export default function NoteListPage() {
 
       const trimmedKeyword = keyword.trim();
 
-      const result =
-        trimmedKeyword === ""
-          ? await invoke<NoteType[]>("get_notes")
-          : await invoke<NoteType[]>("get_notes_by_keyword", {
+      let result =
+        trimmedKeyword !== ""
+          ? await invoke<NoteType[]>("get_notes_by_keyword", {
               keyword: trimmedKeyword,
-            });
+            })
+          : selectedFolderId !== null
+            ? await invoke<NoteType[]>("get_notes_by_folder_id", {
+                id: selectedFolderId,
+              })
+            : await invoke<NoteType[]>("get_notes");
+
+      if (selectedFolderId !== null) {
+        result = result.filter((note) => note.folder_id === selectedFolderId);
+      }
 
       setNotes(result);
     } catch (error) {
@@ -46,15 +66,17 @@ export default function NoteListPage() {
   };
 
   useEffect(() => {
+    fetchFolders();
+  }, []);
+
+  useEffect(() => {
     fetchNotes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword]);
+  }, [keyword, selectedFolderId]);
 
   const regex = useMemo(() => {
-    if (!keyword) return null;
-
-    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
+    if (!keyword.trim()) return null;
+    const escaped = keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     return new RegExp(`(${escaped})`, "gi");
   }, [keyword]);
 
@@ -69,94 +91,132 @@ export default function NoteListPage() {
   };
 
   return (
-    <div className="min-vh-100 bg-dark text-white d-flex flex-column">
-      <header className="d-flex align-items-center justify-content-between border-bottom border-secondary px-4 py-3">
-        <h1 className="h4 fw-bold mb-0">메모 목록</h1>
-
-        <div className="d-flex gap-2">
-          <button
-            onClick={() => navigate("/create")}
-            className="btn btn-primary"
-          >
-            새 메모
-          </button>
+    <div className="min-vh-100 bg-dark text-white d-flex">
+      <aside
+        className="border-end border-secondary p-3 bg-black"
+        style={{ width: 240, minWidth: 240, maxWidth: 240 }}
+      >
+        <div className="d-flex align-items-center justify-content-between mb-3">
+          <h2 className="mt-5 h6 fw-bold mb-0">폴더</h2>
 
           <button
             onClick={() => navigate("/folder/create")}
-            className="btn btn-primary"
+            className="btn btn-outline-primary btn-sm"
           >
-            새 폴더
+            +
           </button>
+        </div>
 
+        <div className="d-grid gap-2">
           <button
-            onClick={() => navigate("/trash")}
-            className="btn btn-primary"
+            onClick={() => setSelectedFolderId(null)}
+            className={`btn text-start ${
+              selectedFolderId === null
+                ? "btn-primary"
+                : "btn-outline-secondary"
+            }`}
           >
-            휴지통
+            전체 메모
           </button>
-        </div>
-      </header>
 
-      <main className="flex-grow-1 overflow-auto p-4">
-        <div className="mb-4">
-          <input
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            className="form-control bg-black text-white border-secondary"
-            placeholder="제목, 내용, 폴더명으로 검색"
-          />
+          {folders.map((folder) => (
+            <button
+              key={folder.id}
+              onClick={() => setSelectedFolderId(folder.id)}
+              className={`btn text-start ${
+                selectedFolderId === folder.id
+                  ? "btn-primary"
+                  : "btn-outline-secondary"
+              }`}
+            >
+              {folder.name}
+            </button>
+          ))}
         </div>
+      </aside>
 
-        {loading ? (
-          <p className="text-secondary">불러오는 중...</p>
-        ) : notes.length === 0 ? (
-          <div className="d-flex h-100 align-items-center justify-content-center text-secondary">
-            {keyword.trim() === ""
-              ? "아직 작성된 메모가 없습니다."
-              : "검색 결과가 없습니다."}
+      <div className="flex-grow-1 d-flex flex-column">
+        <header className="d-flex align-items-center justify-content-between border-bottom border-secondary px-4 py-3">
+          <h1 className="h4 fw-bold mb-0">메모 목록</h1>
+
+          <div className="d-flex gap-2">
+            <button
+              onClick={() => navigate("/create")}
+              className="btn btn-primary"
+            >
+              새 메모
+            </button>
+
+            <button
+              onClick={() => navigate("/trash")}
+              className="btn btn-primary"
+            >
+              휴지통
+            </button>
           </div>
-        ) : (
-          <div className="row g-3">
-            {notes.map((note) => (
-              <div key={note.id} className="col-12">
-                <div className="card bg-black text-white border-secondary">
-                  <div className="card-body">
-                    <div className="d-flex align-items-start justify-content-between gap-3">
-                      <button
-                        onClick={() => navigate(`/update/${note.id}`)}
-                        className="btn text-start text-white flex-grow-1 p-0 border-0"
-                      >
-                        <h2 className="h5 fw-semibold text-truncate mb-2">
-                          {highlightText(note.title || "제목 없음")}
-                        </h2>
+        </header>
 
-                        <p className="text-secondary small mb-2">
-                          {highlightText(note.folder_name || "폴더 없음")}
-                        </p>
+        <main className="flex-grow-1 overflow-auto p-4">
+          <div className="mb-4">
+            <input
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              className="form-control bg-black text-white border-secondary"
+              placeholder="제목, 내용, 폴더명으로 검색"
+            />
+          </div>
 
-                        <p className="text-secondary small mb-2">
-                          {highlightText(note.content || "내용 없음")}
-                        </p>
+          {loading ? (
+            <p className="text-secondary">불러오는 중...</p>
+          ) : notes.length === 0 ? (
+            <div className="d-flex h-100 align-items-center justify-content-center text-secondary">
+              {keyword.trim() === ""
+                ? "아직 작성된 메모가 없습니다."
+                : "검색 결과가 없습니다."}
+            </div>
+          ) : (
+            <div className="row g-3">
+              {notes.map((note) => (
+                <div key={note.id} className="col-12">
+                  <div className="card bg-black text-white border-secondary">
+                    <div className="card-body">
+                      <div className="d-flex align-items-start justify-content-between gap-3">
+                        <button
+                          onClick={() => navigate(`/update/${note.id}`)}
+                          className="btn text-start text-white flex-grow-1 p-0 border-0"
+                        >
+                          <h2 className="h5 fw-semibold text-truncate mb-2">
+                            {highlightText(note.title || "제목 없음")}
+                          </h2>
 
-                        <p className="text-secondary small mb-0">
-                          수정일: {new Date(note.updated_at).toLocaleString()}
-                        </p>
-                      </button>
+                          <p className="text-secondary small mb-2">
+                            {highlightText(note.folder_name || "폴더 없음")}
+                          </p>
 
-                      <button
-                        onClick={() => handleDelete(note.id)}
-                        className="btn btn-outline-danger btn-sm"
-                      >
-                        삭제
-                      </button>
+                          <p className="text-secondary small mb-2">
+                            {highlightText(note.content || "내용 없음")}
+                          </p>
+
+                          <p className="text-secondary small mb-0">
+                            수정일: {new Date(note.updated_at).toLocaleString()}
+                          </p>
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(note.id)}
+                          className="btn btn-outline-danger btn-sm"
+                        >
+                          삭제
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
