@@ -2,6 +2,7 @@ use sqlx::SqlitePool;
 
 use crate::{errors::AppResult, models::note::{CreateNoteRequest, Note, UpdateNoteRequest}};
 use crate::errors::AppError;
+use serde_json::Value;
 
 pub async fn create(pool: &SqlitePool, req: CreateNoteRequest) -> AppResult<Note> {
     let note_id: i64 = sqlx::query_scalar(
@@ -119,7 +120,10 @@ pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note
 
     let new_title = req.title.clone().unwrap_or(current.title.clone());
     let new_content = req.content.clone().unwrap_or(current.content.clone());
-    let new_folder_id = req.folder_id.unwrap_or(current.folder_id);
+    let new_folder_id: Option<i64> = match &req.folder_id {
+        Some(Value::Number(n)) => n.as_i64(),
+        _ => None,
+    };
     let new_is_pinned = req.is_pinned.unwrap_or(current.is_pinned);
     let new_is_archived = req.is_archived.unwrap_or(current.is_archived);
 
@@ -146,7 +150,7 @@ pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note
     )
     .bind(req.title.unwrap_or(current.title))
     .bind(req.content.unwrap_or(current.content))
-    .bind(req.folder_id.unwrap_or(current.folder_id))
+    .bind(new_folder_id)
     .bind(req.is_pinned.unwrap_or(current.is_pinned))
     .bind(req.is_archived.unwrap_or(current.is_archived))
     .bind(req.id)
@@ -170,6 +174,7 @@ pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note
 
     Ok(note)
 }
+
 pub async fn soft_delete(pool: &SqlitePool, id: i64) -> AppResult<()> {
     sqlx::query(
         r#"

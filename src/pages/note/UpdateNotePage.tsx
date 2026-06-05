@@ -71,7 +71,7 @@ export default function UpdateNotePage() {
         req: {
           id: Number(id),
           title,
-          folder_id: Number(folderId),
+          folder_id: folderId === "" ? null : Number(folderId),
           content,
         },
       });
