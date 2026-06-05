@@ -230,11 +230,11 @@ pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note
         WHERE id = ?6
         "#,
     )
-    .bind(req.title.unwrap_or(current.title))
-    .bind(req.content.unwrap_or(current.content))
+    .bind(new_title)
+    .bind(new_content)
     .bind(new_folder_id)
-    .bind(req.is_pinned.unwrap_or(current.is_pinned))
-    .bind(req.is_archived.unwrap_or(current.is_archived))
+    .bind(new_is_pinned)
+    .bind(new_is_archived)
     .bind(req.id)
     .execute(pool)
     .await?;
@@ -286,5 +286,4 @@ pub async fn delete(pool: &SqlitePool, id: i64) ->AppResult<()> {
     .await?;
 
     Ok(())
-
 }

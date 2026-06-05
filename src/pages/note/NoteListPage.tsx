@@ -1,18 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
-import { NoteType } from "../../types/type";
-
-type FolderType = {
-  id: number;
-  name: string;
-};
+import { FolderType, NoteType } from "../../types/type";
+import { useZustandStore } from "../../zustand/ZustandStore";
 
 export default function NoteListPage() {
   const navigate = useNavigate();
 
   const [keyword, setKeyword] = useState("");
-  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
+  const { selectedFolderId, setSelectedFolderId } = useZustandStore();
   const [folders, setFolders] = useState<FolderType[]>([]);
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [loading, setLoading] = useState(true);
