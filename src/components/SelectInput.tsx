@@ -29,6 +29,7 @@ const SelectInput = ({
         {title}
       </label>
       <select
+        disabled={disabled}
         value={value ?? ""}
         onChange={(e) => setValue(e.target.value)}
         className="form-select"
