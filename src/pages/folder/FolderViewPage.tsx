@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate, useParams } from "react-router-dom";
 import { FolderType, NoteType } from "../../types/type";
+import { showToast } from "../../components/Toast";
 
 export default function FolderViewPage() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function FolderViewPage() {
         setNotes(notesResult);
       } catch (error) {
         console.error(error);
-        alert("폴더를 불러오지 못했습니다.");
+        showToast("폴더를 불러오지 못했습니다.");
       } finally {
         setLoading(false);
       }

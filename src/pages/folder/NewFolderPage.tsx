@@ -2,6 +2,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 import { BackwardButton } from "../../components/BackwardButton";
+import { showToast } from "../../components/Toast";
 
 export default function NewFolderPage() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function NewFolderPage() {
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      alert("폴더 이름을 입력해주세요.");
+      showToast("폴더 이름을 입력해주세요.");
       return;
     }
 
@@ -29,7 +30,7 @@ export default function NewFolderPage() {
       navigate("/");
     } catch (error) {
       console.error(error);
-      alert("폴더 생성 실패");
+      showToast("폴더 생성 실패");
     } finally {
       setLoading(false);
     }

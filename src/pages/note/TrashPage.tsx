@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { NoteType } from "../../types/type";
 import { BackwardButton } from "../../components/BackwardButton";
+import { showToast } from "../../components/Toast";
 
 export default function TrashPage() {
   const [notes, setNotes] = useState<NoteType[]>([]);
@@ -14,7 +15,7 @@ export default function TrashPage() {
       setNotes(result);
     } catch (error) {
       console.error(error);
-      alert("휴지통 목록을 불러오지 못했습니다.");
+      showToast("휴지통 목록을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -26,7 +27,7 @@ export default function TrashPage() {
       await fetchNotes();
     } catch (error) {
       console.error(error);
-      alert("메모 복구 실패");
+      showToast("메모 복구 실패");
     }
   };
 
@@ -39,7 +40,7 @@ export default function TrashPage() {
       await fetchNotes();
     } catch (error) {
       console.error(error);
-      alert("메모 영구 삭제 실패");
+      showToast("메모 영구 삭제 실패");
     }
   };
 

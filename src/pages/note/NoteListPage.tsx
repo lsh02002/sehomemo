@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 import { FolderType, NoteType } from "../../types/type";
 import { useZustandStore } from "../../zustand/ZustandStore";
+import { showToast } from "../../components/Toast";
 
 export default function NoteListPage() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export default function NoteListPage() {
       setNotes(result);
     } catch (error) {
       console.error(error);
-      alert("메모 목록을 불러오지 못했습니다.");
+      showToast("메모 목록을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +67,7 @@ export default function NoteListPage() {
       await fetchNotes();
     } catch (error) {
       console.error(error);
-      alert("메모 삭제 실패");
+      showToast("메모 삭제 실패");
     }
   };
 

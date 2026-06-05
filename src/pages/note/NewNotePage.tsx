@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { BackwardButton } from "../../components/BackwardButton";
 import SelectInput, { Option } from "../../components/SelectInput";
 import { FolderType } from "../../types/type";
+import { showToast } from "../../components/Toast";
 
 export default function NewNotePage() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function NewNotePage() {
       );
     } catch (error) {
       console.error(error);
-      alert("메모 목록을 불러오지 못했습니다.");
+      showToast("메모 목록을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -38,7 +39,7 @@ export default function NewNotePage() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert("제목을 입력해주세요.");
+      showToast("제목을 입력해주세요.");
       return;
     }
 
@@ -59,7 +60,7 @@ export default function NewNotePage() {
       navigate("/");
     } catch (error) {
       console.error(error);
-      alert("메모 저장 실패");
+      showToast("메모 저장 실패");
     } finally {
       setLoading(false);
     }

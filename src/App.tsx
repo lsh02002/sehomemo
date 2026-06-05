@@ -6,6 +6,7 @@ import UpdateNotePage from "./pages/note/UpdateNotePage";
 import FolderViewPage from "./pages/folder/FolderViewPage";
 import NewFolderPage from "./pages/folder/NewFolderPage";
 import TrashPage from "./pages/note/TrashPage";
+import { BootstrapToastContainer } from "./components/Toast";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/folder/:folderId" element={<FolderViewPage />} />
         <Route path="/trash" element={<TrashPage />} />
       </Routes>
+      <BootstrapToastContainer />
     </HashRouter>
   );
 }
