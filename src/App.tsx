@@ -5,6 +5,7 @@ import NoteListPage from "./pages/note/NoteListPage";
 import UpdateNotePage from "./pages/note/UpdateNotePage";
 import FolderViewPage from "./pages/folder/FolderViewPage";
 import NewFolderPage from "./pages/folder/NewFolderPage";
+import TrashPage from "./pages/note/TrashPage";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/update/:id" element={<UpdateNotePage />} />
         <Route path="/folder/create" element={<NewFolderPage />} />
         <Route path="/folder/:folderId" element={<FolderViewPage />} />
+        <Route path="/trash" element={<TrashPage />} />
       </Routes>
     </HashRouter>
   );

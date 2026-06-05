@@ -40,9 +40,12 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::note_commands::create_note,
             commands::note_commands::get_notes,
+            commands::note_commands::get_deleted_notes,
             commands::note_commands::get_one_note,
+            commands::note_commands::restore_note,
             commands::note_commands::update_note,
-            commands::note_commands::delete_note,
+            commands::note_commands::delete_note_softly,
+            commands::note_commands::delete_note_permanently,
             commands::folder_commands::create_folder,
             commands::folder_commands::get_folders,
             commands::tag_commands::create_tag,

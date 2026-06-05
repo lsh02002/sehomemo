@@ -1,37 +1,45 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { useNavigate } from "react-router-dom";
 import { NoteType } from "../../types/type";
+import { BackwardButton } from "../../components/BackwardButton";
 
-export default function NoteListPage() {
-  const navigate = useNavigate();
+export default function TrashPage() {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchNotes = async () => {
     try {
       setLoading(true);
-
-      const result = await invoke<NoteType[]>("get_notes");
+      const result = await invoke<NoteType[]>("get_deleted_notes");
       setNotes(result);
     } catch (error) {
       console.error(error);
-      alert("메모 목록을 불러오지 못했습니다.");
+      alert("휴지통 목록을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    const ok = window.confirm("이 메모를 삭제할까요?");
-    if (!ok) return;
-
+  const handleRestore = async (id: number) => {
     try {
-      await invoke("delete_note_softly", { id });
+      await invoke("restore_note", { id });
       await fetchNotes();
     } catch (error) {
       console.error(error);
-      alert("메모 삭제 실패");
+      alert("메모 복구 실패");
+    }
+  };
+
+  const handlePermanentDelete = async (id: number) => {
+    const ok = window.confirm("이 메모를 영구 삭제할까요?");
+    if (!ok) return;
+
+    try {
+      await invoke("delete_note_permanently", { id });
+      await fetchNotes();
+    } catch (error) {
+      console.error(error);
+      alert("메모 영구 삭제 실패");
     }
   };
 
@@ -41,35 +49,9 @@ export default function NoteListPage() {
 
   return (
     <div className="min-vh-100 bg-dark text-white d-flex flex-column">
+      <BackwardButton />
       <header className="d-flex align-items-center justify-content-between border-bottom border-secondary px-4 py-3">
-        <h1 className="h4 fw-bold mb-0">메모 목록</h1>
-
-        <div className="d-flex gap-2">
-          <button
-            onClick={() => {
-              navigate("/create");
-            }}
-            className="btn btn-primary"
-          >
-            새 메모
-          </button>
-          <button
-            onClick={() => {
-              navigate("/folder/create");
-            }}
-            className="btn btn-primary"
-          >
-            새 폴더
-          </button>
-          <button
-            onClick={() => {
-              navigate("/trash");
-            }}
-            className="btn btn-primary"
-          >
-            휴지통
-          </button>
-        </div>
+        <h1 className="h4 fw-bold mb-0">휴지통</h1>
       </header>
 
       <main className="flex-grow-1 overflow-auto p-4">
@@ -77,7 +59,7 @@ export default function NoteListPage() {
           <p className="text-secondary">불러오는 중...</p>
         ) : notes.length === 0 ? (
           <div className="d-flex h-100 align-items-center justify-content-center text-secondary">
-            아직 작성된 메모가 없습니다.
+            휴지통이 비어 있습니다.
           </div>
         ) : (
           <div className="row g-3">
@@ -86,12 +68,7 @@ export default function NoteListPage() {
                 <div className="card bg-black text-white border-secondary">
                   <div className="card-body">
                     <div className="d-flex align-items-start justify-content-between gap-3">
-                      <button
-                        onClick={() => {
-                          navigate(`/update/${note.id}`);
-                        }}
-                        className="btn text-start text-white flex-grow-1 p-0 border-0"
-                      >
+                      <div className="flex-grow-1">
                         <h2 className="h5 fw-semibold text-truncate mb-2">
                           {note.title || "제목 없음"}
                         </h2>
@@ -107,14 +84,23 @@ export default function NoteListPage() {
                         <p className="text-secondary small mb-0">
                           수정일: {new Date(note.updated_at).toLocaleString()}
                         </p>
-                      </button>
+                      </div>
 
-                      <button
-                        onClick={() => handleDelete(note.id)}
-                        className="btn btn-outline-danger btn-sm"
-                      >
-                        삭제
-                      </button>
+                      <div className="d-flex gap-2">
+                        <button
+                          onClick={() => handleRestore(note.id)}
+                          className="btn btn-outline-success btn-sm"
+                        >
+                          복구
+                        </button>
+
+                        <button
+                          onClick={() => handlePermanentDelete(note.id)}
+                          className="btn btn-outline-danger btn-sm"
+                        >
+                          영구삭제
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

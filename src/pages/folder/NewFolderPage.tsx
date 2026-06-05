@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
+import { BackwardButton } from "../../components/BackwardButton";
 
 export default function NewFolderPage() {
   const navigate = useNavigate();
@@ -36,16 +37,9 @@ export default function NewFolderPage() {
 
   return (
     <div className="min-vh-100 bg-dark text-white d-flex flex-column">
+      <BackwardButton />
       <header className="d-flex align-items-center justify-content-between border-bottom border-secondary px-4 py-3">
         <h1 className="h4 fw-bold mb-0">새 폴더</h1>
-
-        <button
-          onClick={() => navigate(-1)}
-          className="btn btn-outline-secondary"
-          disabled={loading}
-        >
-          뒤로가기
-        </button>
       </header>
 
       <main className="flex-grow-1 p-4">
