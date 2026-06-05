@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 import { NoteType } from "../../types/type";
 
 export default function NoteListPage() {
   const navigate = useNavigate();
+
+  const [keyword, setKeyword] = useState("");
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -12,7 +14,15 @@ export default function NoteListPage() {
     try {
       setLoading(true);
 
-      const result = await invoke<NoteType[]>("get_notes");
+      const trimmedKeyword = keyword.trim();
+
+      const result =
+        trimmedKeyword === ""
+          ? await invoke<NoteType[]>("get_notes")
+          : await invoke<NoteType[]>("get_notes_by_keyword", {
+              keyword: trimmedKeyword,
+            });
+
       setNotes(result);
     } catch (error) {
       console.error(error);
@@ -37,7 +47,26 @@ export default function NoteListPage() {
 
   useEffect(() => {
     fetchNotes();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyword]);
+
+  const regex = useMemo(() => {
+    if (!keyword) return null;
+
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    return new RegExp(`(${escaped})`, "gi");
+  }, [keyword]);
+
+  const highlightText = (text: string) => {
+    if (!regex) return text;
+
+    return text
+      .split(regex)
+      .map((part, index) =>
+        regex.test(part) ? <mark key={index}>{part}</mark> : part,
+      );
+  };
 
   return (
     <div className="min-vh-100 bg-dark text-white d-flex flex-column">
@@ -46,25 +75,21 @@ export default function NoteListPage() {
 
         <div className="d-flex gap-2">
           <button
-            onClick={() => {
-              navigate("/create");
-            }}
+            onClick={() => navigate("/create")}
             className="btn btn-primary"
           >
             새 메모
           </button>
+
           <button
-            onClick={() => {
-              navigate("/folder/create");
-            }}
+            onClick={() => navigate("/folder/create")}
             className="btn btn-primary"
           >
             새 폴더
           </button>
+
           <button
-            onClick={() => {
-              navigate("/trash");
-            }}
+            onClick={() => navigate("/trash")}
             className="btn btn-primary"
           >
             휴지통
@@ -73,11 +98,22 @@ export default function NoteListPage() {
       </header>
 
       <main className="flex-grow-1 overflow-auto p-4">
+        <div className="mb-4">
+          <input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            className="form-control bg-black text-white border-secondary"
+            placeholder="제목, 내용, 폴더명으로 검색"
+          />
+        </div>
+
         {loading ? (
           <p className="text-secondary">불러오는 중...</p>
         ) : notes.length === 0 ? (
           <div className="d-flex h-100 align-items-center justify-content-center text-secondary">
-            아직 작성된 메모가 없습니다.
+            {keyword.trim() === ""
+              ? "아직 작성된 메모가 없습니다."
+              : "검색 결과가 없습니다."}
           </div>
         ) : (
           <div className="row g-3">
@@ -87,21 +123,19 @@ export default function NoteListPage() {
                   <div className="card-body">
                     <div className="d-flex align-items-start justify-content-between gap-3">
                       <button
-                        onClick={() => {
-                          navigate(`/update/${note.id}`);
-                        }}
+                        onClick={() => navigate(`/update/${note.id}`)}
                         className="btn text-start text-white flex-grow-1 p-0 border-0"
                       >
                         <h2 className="h5 fw-semibold text-truncate mb-2">
-                          {note.title || "제목 없음"}
+                          {highlightText(note.title || "제목 없음")}
                         </h2>
 
                         <p className="text-secondary small mb-2">
-                          {note.folder_name || "폴더 없음"}
+                          {highlightText(note.folder_name || "폴더 없음")}
                         </p>
 
                         <p className="text-secondary small mb-2">
-                          {note.content || "내용 없음"}
+                          {highlightText(note.content || "내용 없음")}
                         </p>
 
                         <p className="text-secondary small mb-0">

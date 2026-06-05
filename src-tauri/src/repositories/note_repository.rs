@@ -57,6 +57,35 @@ pub async fn find_all(pool: &SqlitePool) -> AppResult<Vec<Note>> {
     Ok(notes)
 }
 
+pub async fn find_by_keyword(pool: &SqlitePool, keyword: String) -> AppResult<Vec<Note>> {
+    let keyword = format!("%{}%", keyword);
+
+    let notes = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT
+            n.*,
+            f.name AS folder_name
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.is_deleted = 0
+          AND (
+                n.title LIKE ?1
+             OR n.content LIKE ?1
+             OR f.name LIKE ?1
+          )
+        ORDER BY
+            n.is_pinned DESC,
+            n.updated_at DESC
+        "#,
+    )
+    .bind(keyword)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(notes)    
+}
+
 pub async fn find_deleted_all(pool: &SqlitePool) -> AppResult<Vec<Note>> {
     let notes = sqlx::query_as::<_, Note>(
         r#"

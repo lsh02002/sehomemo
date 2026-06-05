@@ -13,6 +13,11 @@ pub async fn get_notes(state: State<'_, AppState>) -> AppResult<Vec<Note>> {
 }
 
 #[tauri::command]
+pub async fn get_notes_by_keyword(state: State<'_, AppState>, keyword: String) -> AppResult<Vec<Note>> {
+    note_service::get_notes_by_keyword(&state.pool, keyword).await
+}
+
+#[tauri::command]
 pub async fn get_deleted_notes(state: State<'_, AppState>) -> AppResult<Vec<Note>> {
     note_service::get_deleted_notes(&state.pool).await
 }
