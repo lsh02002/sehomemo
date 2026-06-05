@@ -71,6 +71,10 @@ export default function NoteListPage() {
     }
   };
 
+  const selectedFolderName = folders?.find(
+    (folder) => folder.id === selectedFolderId,
+  )?.name;
+
   const regex = useMemo(() => {
     if (!keyword.trim()) return null;
     const escaped = keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -161,6 +165,16 @@ export default function NoteListPage() {
               className="form-control bg-black text-white border-secondary"
               placeholder="제목, 내용, 폴더명으로 검색"
             />
+          </div>
+
+          <div className="mb-3">
+            {loading
+              ? "불러오는 중..."
+              : keyword.trim()
+                ? `"${keyword.trim()}" 검색 결과(${notes.length})`
+                : selectedFolderName === undefined
+                  ? `전체메모(${notes.length})`
+                  : `${selectedFolderName}(${notes.length})`}
           </div>
 
           {loading ? (
