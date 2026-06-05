@@ -109,7 +109,7 @@ pub async fn find_deleted_all(pool: &SqlitePool) -> AppResult<Vec<Note>> {
 
 pub async fn find_by_folder_id(
     pool: &SqlitePool,
-    folder_id: i64,
+    id: i64,
 ) -> AppResult<Vec<Note>> {
     let notes = sqlx::query_as::<_, Note>(
         r#"
@@ -126,7 +126,7 @@ pub async fn find_by_folder_id(
             n.updated_at DESC
         "#
     )
-    .bind(folder_id)
+    .bind(id)
     .fetch_all(pool)
     .await?;
 
