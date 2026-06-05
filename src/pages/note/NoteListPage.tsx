@@ -52,6 +52,15 @@ export default function NoteListPage() {
     }
   };
 
+  useEffect(() => {
+    fetchFolders();
+  }, []);
+
+  useEffect(() => {
+    fetchNotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyword, selectedFolderId]);
+
   const handleDelete = async (id: number) => {
     const ok = window.confirm("이 메모를 삭제할까요?");
     if (!ok) return;
@@ -64,15 +73,6 @@ export default function NoteListPage() {
       alert("메모 삭제 실패");
     }
   };
-
-  useEffect(() => {
-    fetchFolders();
-  }, []);
-
-  useEffect(() => {
-    fetchNotes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword, selectedFolderId]);
 
   const regex = useMemo(() => {
     if (!keyword.trim()) return null;
