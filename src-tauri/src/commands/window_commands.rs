@@ -175,13 +175,26 @@ pub async fn show_sticky_window(
 pub async fn hide_sticky_window(
     app: AppHandle,
     note_id: i64,
-) -> Result<(), String> {
+) -> Result<(), String> {    
     let label = format!("sticky-{}", note_id);
 
     if let Some(window) = app.get_webview_window(&label) {
-        window.hide().map_err(|e| e.to_string())?;
-        window.set_focus().map_err(|e| e.to_string())?;
+        window.hide().map_err(|e| e.to_string())?;        
     }
 
+    exit_if_no_visible_windows(&app);
+
     Ok(())
+}
+
+fn exit_if_no_visible_windows(app: &AppHandle) {
+    let has_visible_window = app
+        .webview_windows()
+        .values()
+        .any(|w| w.is_visible().unwrap_or(false));    
+
+    if !has_visible_window {
+        println!("{}", "종료됨");
+        app.exit(0);
+    }
 }

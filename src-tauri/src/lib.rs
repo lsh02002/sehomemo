@@ -7,7 +7,7 @@ pub mod services;
 pub mod utils;
 
 use crate::db::AppState;
-use tauri::Manager;
+use tauri::{Manager, WindowEvent};
 
 pub fn run() {
     tauri::Builder::default()
@@ -36,6 +36,21 @@ pub fn run() {
             app.manage(AppState { pool });
 
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            if matches!(event, WindowEvent::Destroyed) {
+                let app = window.app_handle();
+
+                let has_visible_window = app
+                    .webview_windows()
+                    .values()
+                    .any(|w| w.is_visible().unwrap_or(false));
+
+                if !has_visible_window {
+                    println!("{}", "종료됨");
+                    app.exit(0);
+                }
+            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::note_commands::create_note,

@@ -56,7 +56,7 @@ export default function StickyNotePage() {
   };
 
   const handleClose = async () => {
-  await invoke("close_sticky_window", {
+  await invoke("hide_sticky_window", {
     noteId: Number(id),
   });
 };
