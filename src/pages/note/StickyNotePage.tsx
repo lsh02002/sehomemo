@@ -15,6 +15,8 @@ export default function StickyNotePage() {
   const fetchNote = async () => {
     if (!id) return;
 
+    await invoke("show_current_window");
+
     const result = await invoke<NoteType>("get_one_note", {
       id: Number(id),
     });
@@ -54,11 +56,9 @@ export default function StickyNotePage() {
   };
 
   const handleClose = async () => {
-    await emit("sticky-closed", {
-      id: Number(id),
+    await invoke("close_sticky_window", {
+      noteId: Number(id),
     });
-
-    await invoke("close_current_window");
   };
 
   useEffect(() => {

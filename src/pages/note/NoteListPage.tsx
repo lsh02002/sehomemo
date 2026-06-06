@@ -60,6 +60,7 @@ export default function NoteListPage() {
   }, []);
 
   useEffect(() => {
+    invoke("show_current_window");
     fetchNotes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword, selectedFolderId]);
@@ -92,13 +93,6 @@ export default function NoteListPage() {
   useEffect(() => {
     const unlisten = listen<{ id: number }>("sticky-closed", async (event) => {
       try {
-        await invoke("update_note", {
-          req: {
-            id: event.payload.id,
-            is_pinned: false,
-          },
-        });
-
         setNotes((prev) =>
           prev.map((note) =>
             note.id === event.payload.id ? { ...note, is_pinned: false } : note,
@@ -127,31 +121,30 @@ export default function NoteListPage() {
     }
   };
 
-  const handlePinnedChange = async (
-    id: number,
-    isPinned: boolean,
-  ) => {
+  const handlePinnedChange = async (id: number, isPinned: boolean) => {
+    const prevNotes = notes;
+
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === id ? { ...note, is_pinned: isPinned } : note,
+      ),
+    );
+
     try {
-      await invoke("update_note", {
-        req: {
-          id,
-          is_pinned: isPinned,
-        },
-      });
-
-      if (isPinned) {
-        await invoke("open_sticky_window", {
-          noteId: id,
-        });
-      } else {
-        await invoke("close_sticky_window", {
-          noteId: id,
-        });
-      }
-
-      await fetchNotes();
+      await Promise.all([
+        invoke("update_note", {
+          req: {
+            id,
+            is_pinned: isPinned,
+          },
+        }),
+        isPinned
+          ? invoke("open_sticky_window", { noteId: id })
+          : invoke("close_sticky_window", { noteId: id }),
+      ]);
     } catch (error) {
       console.error(error);
+      setNotes(prevNotes);
       showToast("고정 상태 변경 실패");
     }
   };
@@ -315,10 +308,7 @@ export default function NoteListPage() {
                             id={`pin-${note.id}`}
                             checked={note.is_pinned}
                             onChange={(e) =>
-                              handlePinnedChange(
-                                note.id,
-                                e.target.checked,
-                              )
+                              handlePinnedChange(note.id, !note.is_pinned)
                             }
                           />
 

@@ -1,9 +1,11 @@
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::webview::Color;
+use crate::db::AppState;
+use crate::services::note_service;
 
 #[tauri::command]
 pub async fn open_manager_window(app: AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("manager") {
-        window.show().map_err(|e| e.to_string())?;
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
     }
@@ -17,6 +19,8 @@ pub async fn open_manager_window(app: AppHandle) -> Result<(), String> {
     .inner_size(1000.0, 700.0)
     .resizable(true)
     .decorations(true)
+    .visible(false)
+    .background_color(Color(33, 37, 41, 255))
     .build()
     .map_err(|e| e.to_string())?;
 
@@ -27,8 +31,7 @@ pub async fn open_manager_window(app: AppHandle) -> Result<(), String> {
 pub async fn open_empty_sticky_window(
     app: AppHandle,
 ) -> Result<(), String> {
-    if let Some(window) = app.get_webview_window("empty-sticky") {
-        window.show().map_err(|e| e.to_string())?;
+    if let Some(window) = app.get_webview_window("empty-sticky") {        
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
     }
@@ -40,7 +43,11 @@ pub async fn open_empty_sticky_window(
     )
     .title("새 메모")
     .inner_size(280.0, 280.0)
+    .resizable(true)
+    .decorations(false)
     .always_on_top(true)
+    .visible(false)
+    .background_color(Color(255, 193, 7, 255))
     .build()
     .map_err(|e| e.to_string())?;
 
@@ -55,8 +62,7 @@ pub async fn open_sticky_window(
     let label = format!("sticky-{}", note_id);
     let url = format!("/#/sticky/{}", note_id);
 
-    if let Some(window) = app.get_webview_window(&label) {
-        window.show().map_err(|e| e.to_string())?;
+    if let Some(window) = app.get_webview_window(&label) {        
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
     }
@@ -71,9 +77,19 @@ pub async fn open_sticky_window(
     .resizable(true)
     .decorations(false)
     .always_on_top(true)
+    .visible(false)
+    .background_color(Color(255, 193, 7, 255))
     .build()
     .map_err(|e| e.to_string())?;
 
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn show_current_window(
+    window: tauri::WebviewWindow,
+) -> Result<(), String> {
+    window.show().map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -88,8 +104,18 @@ pub async fn close_current_window(
 #[tauri::command]
 pub async fn close_sticky_window(
     app: AppHandle,
+    state: tauri::State<'_, AppState>,
     note_id: i64,
 ) -> Result<(), String> {
+    note_service::update_pinned_note(&state.pool, note_id)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    app.emit("sticky-closed", serde_json::json!({
+        "id": note_id
+    }))
+    .map_err(|e| e.to_string())?;
+
     let label = format!("sticky-{}", note_id);
 
     if let Some(window) = app.get_webview_window(&label) {

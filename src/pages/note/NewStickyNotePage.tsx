@@ -17,6 +17,10 @@ export default function NewStickyNotePage() {
     };
   }, []);
 
+  useEffect(() => {
+    invoke("show_current_window");
+  }, []);
+
   const handleOpenManager = async () => {
     await invoke("open_manager_window");
   };

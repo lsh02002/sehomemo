@@ -60,6 +60,7 @@ pub fn run() {
             commands::window_commands::open_manager_window,
             commands::window_commands::open_empty_sticky_window,
             commands::window_commands::open_sticky_window,
+            commands::window_commands::show_current_window,
             commands::window_commands::close_current_window,
             commands::window_commands::close_sticky_window,
         ])

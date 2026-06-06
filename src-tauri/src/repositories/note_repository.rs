@@ -353,6 +353,36 @@ pub async fn update_silent(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResu
     Ok(note)
 }
 
+pub async  fn update_pinned(pool: &SqlitePool, id: i64) -> AppResult<Note> {
+    sqlx::query(
+        r#"
+        UPDATE notes
+        SET is_pinned = 0
+        WHERE id = ?
+        "#,
+    )
+    .bind(id)
+    .execute(pool)
+    .await?;    
+
+    let note = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT
+            n.*,            
+            f.name AS folder_name            
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.id = ?
+        "#,
+    )
+    .bind(id)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(note)
+}
+
 pub async fn soft_delete(pool: &SqlitePool, id: i64) -> AppResult<()> {
     sqlx::query(
         r#"

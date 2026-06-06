@@ -38,6 +38,10 @@ pub async fn update_note(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult
     note_repository::update(pool, req).await
 }
 
+pub async fn update_pinned_note(pool: &SqlitePool, id: i64) -> AppResult<Note> {
+    note_repository::update_pinned(pool, id).await
+}
+
 pub async fn update_note_silent(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note> {
     note_repository::update_silent(pool, req).await
 }
