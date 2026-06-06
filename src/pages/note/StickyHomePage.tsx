@@ -30,7 +30,6 @@ export default function StickyHomePage() {
           );
         }
 
-        await invoke("close_current_window");
       } catch (error) {
         console.error(error);
         alert("포스트잇을 열지 못했습니다.");

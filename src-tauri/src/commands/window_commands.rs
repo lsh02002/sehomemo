@@ -174,8 +174,21 @@ pub async fn show_sticky_window(
 #[tauri::command]
 pub async fn hide_sticky_window(
     app: AppHandle,
+    state: tauri::State<'_, AppState>,
     note_id: i64,
-) -> Result<(), String> {    
+) -> Result<(), String> {
+    note_service::update_pinned_note(&state.pool, note_id)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    app.emit(
+        "sticky-closed",
+        serde_json::json!({
+            "id": note_id
+        }),
+    )
+    .map_err(|e| e.to_string())?;
+
     let label = format!("sticky-{}", note_id);
 
     if let Some(window) = app.get_webview_window(&label) {

@@ -49,7 +49,7 @@ export default function NewNotePage() {
       await invoke("create_note", {
         req: {
           title,
-          folder_id: folderId === "" ? null : folderId,
+          folder_id: folderId === "" ? null : Number(folderId),
           content,
         },
       });
