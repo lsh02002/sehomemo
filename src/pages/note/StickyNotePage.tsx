@@ -56,10 +56,10 @@ export default function StickyNotePage() {
   };
 
   const handleClose = async () => {
-    await invoke("close_sticky_window", {
-      noteId: Number(id),
-    });
-  };
+  await invoke("close_sticky_window", {
+    noteId: Number(id),
+  });
+};
 
   useEffect(() => {
     fetchNote();

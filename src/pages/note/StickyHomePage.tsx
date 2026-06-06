@@ -8,12 +8,22 @@ export default function StickyHomePage() {
       try {
         let notes = await invoke<NoteType[]>("get_pinned_notes");
 
-        if (notes.length === 0) {
+        const pinnedNotes = notes.filter((note) => note.is_pinned);
+
+        if (pinnedNotes.length === 0) {
           await invoke("open_manager_window");
         } else {
           await Promise.all(
             notes.map((note) =>
-              invoke("open_sticky_window", {
+              invoke("preload_sticky_window", {
+                noteId: note.id,
+              }),
+            ),
+          );
+
+          await Promise.all(
+            pinnedNotes.map((note) =>
+              invoke("show_sticky_window", {
                 noteId: note.id,
               }),
             ),

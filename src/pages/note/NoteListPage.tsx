@@ -46,6 +46,25 @@ export default function NoteListPage() {
         result = result.filter((note) => note.folder_id === selectedFolderId);
       }
 
+      const pinnedNotes = result.filter((note) => note.is_pinned);
+
+      // 스티키 창 미리 생성
+      await Promise.all(
+        pinnedNotes.map((note) =>
+          invoke("preload_sticky_window", {
+            noteId: note.id,
+          }),
+        ),
+      );
+
+      await Promise.all(
+        pinnedNotes.map((note) =>
+          invoke("show_sticky_window", {
+            noteId: note.id,
+          }),
+        ),
+      );
+
       setNotes(result);
     } catch (error) {
       console.error(error);
@@ -124,29 +143,31 @@ export default function NoteListPage() {
   const handlePinnedChange = async (id: number, isPinned: boolean) => {
     const prevNotes = notes;
 
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === id ? { ...note, is_pinned: isPinned } : note,
-      ),
-    );
-
     try {
-      await Promise.all([
-        invoke("update_note", {
-          req: {
-            id,
-            is_pinned: isPinned,
-          },
-        }),
-        isPinned
-          ? invoke("open_sticky_window", { noteId: id })
-          : invoke("close_sticky_window", { noteId: id }),
-      ]);
+      await invoke("update_note", {
+        req: {
+          id,
+          is_pinned: isPinned,
+        },
+      });
+
+      if (isPinned) {
+        await invoke("preload_sticky_window", { noteId: id });
+        await invoke("show_sticky_window", { noteId: id });
+      } else {
+        await invoke("hide_sticky_window", { noteId: id });
+      }
     } catch (error) {
       console.error(error);
       setNotes(prevNotes);
       showToast("고정 상태 변경 실패");
     }
+
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === id ? { ...note, is_pinned: isPinned } : note,
+      ),
+    );
   };
 
   const selectedFolderName = folders?.find(

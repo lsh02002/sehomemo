@@ -62,7 +62,7 @@ pub async fn open_sticky_window(
     let label = format!("sticky-{}", note_id);
     let url = format!("/#/sticky/{}", note_id);
 
-    if let Some(window) = app.get_webview_window(&label) {        
+    if let Some(window) = app.get_webview_window(&label) {
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
     }
@@ -120,6 +120,67 @@ pub async fn close_sticky_window(
 
     if let Some(window) = app.get_webview_window(&label) {
         window.close().map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn preload_sticky_window(
+    app: AppHandle,
+    note_id: i64,
+) -> Result<(), String> {
+    let label = format!("sticky-{}", note_id);
+
+    if app.get_webview_window(&label).is_some() {
+        return Ok(());
+    }
+
+    let url = format!("/#/sticky/{}", note_id);
+
+    WebviewWindowBuilder::new(
+        &app,
+        label,
+        WebviewUrl::App(url.into()),
+    )
+    .title("포스트잇")
+    .inner_size(280.0, 280.0)
+    .resizable(true)
+    .decorations(false)
+    .always_on_top(true)
+    .visible(false)
+    .background_color(Color(255, 193, 7, 255))
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn show_sticky_window(
+    app: AppHandle,
+    note_id: i64,
+) -> Result<(), String> {
+    let label = format!("sticky-{}", note_id);
+
+    if let Some(window) = app.get_webview_window(&label) {
+        window.show().map_err(|e| e.to_string())?;
+        window.set_focus().map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn hide_sticky_window(
+    app: AppHandle,
+    note_id: i64,
+) -> Result<(), String> {
+    let label = format!("sticky-{}", note_id);
+
+    if let Some(window) = app.get_webview_window(&label) {
+        window.hide().map_err(|e| e.to_string())?;
+        window.set_focus().map_err(|e| e.to_string())?;
     }
 
     Ok(())
