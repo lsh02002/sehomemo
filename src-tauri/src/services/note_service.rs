@@ -14,6 +14,10 @@ pub async fn get_notes_by_folder_id(pool: &SqlitePool, id: i64) -> AppResult<Vec
     note_repository::find_by_folder_id(pool, id).await
 }
 
+pub async fn get_pinned_notes(pool: &SqlitePool) -> AppResult<Vec<Note>> {
+    note_repository::find_pinned_all(pool).await
+}
+
 pub async fn get_notes_by_keyword(pool: &SqlitePool, keyword: String) -> AppResult<Vec<Note>> {
     note_repository::find_by_keyword(pool, keyword).await
 }
@@ -32,6 +36,10 @@ pub async fn restore_note(pool: &SqlitePool, id: i64) -> AppResult<Note> {
 
 pub async fn update_note(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note> {
     note_repository::update(pool, req).await
+}
+
+pub async fn update_note_silent(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note> {
+    note_repository::update_silent(pool, req).await
 }
 
 pub async fn delete_note_softly(pool: &SqlitePool, id: i64) -> AppResult<()> {

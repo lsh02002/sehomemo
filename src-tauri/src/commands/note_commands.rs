@@ -18,6 +18,11 @@ pub async fn get_notes_by_folder_id(state: State<'_, AppState>, id: i64) -> AppR
 }
 
 #[tauri::command]
+pub async fn get_pinned_notes(state: State<'_, AppState>) -> AppResult<Vec<Note>> {
+    note_service::get_pinned_notes(&state.pool).await
+}
+
+#[tauri::command]
 pub async fn get_notes_by_keyword(state: State<'_, AppState>, keyword: String) -> AppResult<Vec<Note>> {
     note_service::get_notes_by_keyword(&state.pool, keyword).await
 }
@@ -40,6 +45,11 @@ pub async fn restore_note(state: State<'_, AppState>, id: i64) -> AppResult<Note
 #[tauri::command]
 pub async fn update_note(state: State<'_, AppState>, req: UpdateNoteRequest) -> AppResult<Note> {
     note_service::update_note(&state.pool, req).await
+}
+
+#[tauri::command]
+pub async fn update_note_silent(state: State<'_, AppState>, req: UpdateNoteRequest) -> AppResult<Note> {
+    note_service::update_note_silent(&state.pool, req).await
 }
 
 #[tauri::command]

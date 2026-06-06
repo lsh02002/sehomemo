@@ -1,6 +1,5 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Note {
@@ -29,7 +28,8 @@ pub struct UpdateNoteRequest {
     pub id: i64,
     pub title: Option<String>,
     pub content: Option<String>,
-    pub folder_id: Option<Value>,
+    pub folder_id: Option<i64>,
+    pub clear_folder: Option<bool>,
     pub is_pinned: Option<bool>,
     pub is_archived: Option<bool>,
 }

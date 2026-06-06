@@ -2,7 +2,6 @@ use sqlx::SqlitePool;
 
 use crate::{errors::AppResult, models::note::{CreateNoteRequest, Note, UpdateNoteRequest}};
 use crate::errors::AppError;
-use serde_json::Value;
 
 pub async fn create(pool: &SqlitePool, req: CreateNoteRequest) -> AppResult<Note> {
     let note_id: i64 = sqlx::query_scalar(
@@ -133,6 +132,28 @@ pub async fn find_by_folder_id(
     Ok(notes)
 }
 
+pub async fn find_pinned_all(
+    pool: &SqlitePool,
+) -> AppResult<Vec<Note>> {
+    let notes = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT
+            n.*,
+            f.name AS folder_name
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.is_deleted = 0
+          AND n.is_pinned = 1
+        ORDER BY n.updated_at DESC
+        "#,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(notes)
+}
+
 pub async fn find_one(pool: &SqlitePool, id: i64) -> AppResult<Note> {
     let note = sqlx::query_as::<_, Note>(
         r#"
@@ -202,9 +223,10 @@ pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note
 
     let new_title = req.title.clone().unwrap_or(current.title.clone());
     let new_content = req.content.clone().unwrap_or(current.content.clone());
-    let new_folder_id: Option<i64> = match &req.folder_id {
-        Some(Value::Number(n)) => n.as_i64(),
-        _ => None,
+    let new_folder_id = if req.clear_folder.unwrap_or(false) {
+    None
+    } else {
+        req.folder_id.or(current.folder_id)
     };
     let new_is_pinned = req.is_pinned.unwrap_or(current.is_pinned);
     let new_is_archived = req.is_archived.unwrap_or(current.is_archived);
@@ -216,6 +238,80 @@ pub async fn update(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note
         && current.is_archived == new_is_archived
     {
         return Err(AppError::Message("변경된 내용이 없습니다.".into()));
+    }
+
+    sqlx::query(
+        r#"
+        UPDATE notes
+        SET title = ?1,
+            content = ?2,
+            folder_id = ?3,
+            is_pinned = ?4,
+            is_archived = ?5,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?6
+        "#,
+    )
+    .bind(new_title)
+    .bind(new_content)
+    .bind(new_folder_id)
+    .bind(new_is_pinned)
+    .bind(new_is_archived)
+    .bind(req.id)
+    .execute(pool)
+    .await?;
+
+    let note = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT
+            n.*,            
+            f.name AS folder_name            
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.id = ?
+        "#,
+    )
+    .bind(req.id)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(note)
+}
+
+pub async fn update_silent(pool: &SqlitePool, req: UpdateNoteRequest) -> AppResult<Note> {
+    let current = sqlx::query_as::<_, Note>(
+        r#"
+        SELECT
+            n.*,            
+            f.name AS folder_name            
+        FROM notes n
+        LEFT JOIN folders f
+            ON n.folder_id = f.id
+        WHERE n.id = ?
+        "#,
+    )
+    .bind(req.id)
+    .fetch_one(pool)
+    .await?;
+
+    let new_title = req.title.clone().unwrap_or(current.title.clone());
+    let new_content = req.content.clone().unwrap_or(current.content.clone());
+    let new_folder_id = if req.clear_folder.unwrap_or(false) {
+    None
+    } else {
+        req.folder_id.or(current.folder_id)
+    };
+    let new_is_pinned = req.is_pinned.unwrap_or(current.is_pinned);
+    let new_is_archived = req.is_archived.unwrap_or(current.is_archived);
+
+    if current.title == new_title
+        && current.content == new_content
+        && current.folder_id == new_folder_id
+        && current.is_pinned == new_is_pinned
+        && current.is_archived == new_is_archived
+    {
+        return Ok(current)
     }
 
     sqlx::query(

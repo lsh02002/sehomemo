@@ -7,12 +7,18 @@ import FolderViewPage from "./pages/folder/FolderViewPage";
 import NewFolderPage from "./pages/folder/NewFolderPage";
 import TrashPage from "./pages/note/TrashPage";
 import { BootstrapToastContainer } from "./components/Toast";
+import StickyNotePage from "./pages/note/StickyNotePage";
+import StickyHomePage from "./pages/note/StickyHomePage";
+import NewStickyNotePage from "./pages/note/NewStickyNotePage";
 
 function App() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<NoteListPage />} />
+        <Route path="/" element={<StickyHomePage />} />
+        <Route path="/sticky/new" element={<NewStickyNotePage />} />
+        <Route path="/sticky/:id" element={<StickyNotePage />} />
+        <Route path="/manager" element={<NoteListPage />} />
         <Route path="/create" element={<NewNotePage />} />
         <Route path="/update/:id" element={<UpdateNotePage />} />
         <Route path="/folder/create" element={<NewFolderPage />} />

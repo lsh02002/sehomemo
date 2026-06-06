@@ -5,6 +5,7 @@ import { BackwardButton } from "../../components/BackwardButton";
 import SelectInput, { Option } from "../../components/SelectInput";
 import { FolderType, NoteType } from "../../types/type";
 import { showToast } from "../../components/Toast";
+import { emit, listen } from "@tauri-apps/api/event";
 
 export default function UpdateNotePage() {
   const navigate = useNavigate();
@@ -35,29 +36,43 @@ export default function UpdateNotePage() {
     }
   };
 
+  const loadNote = async () => {
+    try {
+      const note = await invoke<NoteType>("get_one_note", {
+        id: Number(id),
+      });
+
+      setTitle(note.title);
+      setFolderId(String(note.folder_id));
+      setContent(note.content);
+    } catch (error) {
+      console.error(error);
+      showToast("메모 불러오기 실패");
+      navigate("/");
+    }
+  };
+
   useEffect(() => {
     fetchFolders();
   }, []);
 
   useEffect(() => {
-    const loadNote = async () => {
-      try {
-        const note = await invoke<NoteType>("get_one_note", {
-          id: Number(id),
-        });
-
-        setTitle(note.title);
-        setFolderId(String(note.folder_id));
-        setContent(note.content);
-      } catch (error) {
-        console.error(error);
-        showToast("메모 불러오기 실패");
-        navigate("/");
-      }
-    };
-
     loadNote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, navigate]);
+
+  useEffect(() => {
+    const unlisten = listen<{ id: number }>("note-updated-sticky", (event) => {
+      if (event.payload.id === Number(id)) {
+        loadNote();
+      }
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleUpdate = async () => {
     if (!title.trim()) {
@@ -68,16 +83,21 @@ export default function UpdateNotePage() {
     try {
       setLoading(true);
 
-      await invoke("update_note", {
+      const updatedNote = await invoke("update_note", {
         req: {
           id: Number(id),
           title,
-          folder_id: folderId === "" ? null : Number(folderId),
           content,
+          folder_id: folderId === "" ? undefined : Number(folderId),
+          clear_folder: folderId === "",
         },
       });
 
-      navigate("/");
+      await emit("note-updated", {
+        id: Number(id),
+      });
+
+      await emit("note-updated-sticky", updatedNote);
     } catch (error) {
       console.error(error);
       showToast(String(error));

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FolderType, NoteType } from "../../types/type";
 import { useZustandStore } from "../../zustand/ZustandStore";
 import { showToast } from "../../components/Toast";
+import { listen } from "@tauri-apps/api/event";
 
 export default function NoteListPage() {
   const navigate = useNavigate();
@@ -63,6 +64,56 @@ export default function NoteListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword, selectedFolderId]);
 
+  useEffect(() => {
+    const unlisten = listen<{ id: number }>(
+      "note-updated-sticky",
+      async (event) => {
+        try {
+          const updatedNote = await invoke<NoteType>("get_one_note", {
+            id: event.payload.id,
+          });
+
+          setNotes((prev) =>
+            prev.map((note) =>
+              note.id === updatedNote.id ? updatedNote : note,
+            ),
+          );
+        } catch (error) {
+          console.error(error);
+        }
+      },
+    );
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
+  useEffect(() => {
+    const unlisten = listen<{ id: number }>("sticky-closed", async (event) => {
+      try {
+        await invoke("update_note", {
+          req: {
+            id: event.payload.id,
+            is_pinned: false,
+          },
+        });
+
+        setNotes((prev) =>
+          prev.map((note) =>
+            note.id === event.payload.id ? { ...note, is_pinned: false } : note,
+          ),
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
   const handleDelete = async (id: number) => {
     const ok = window.confirm("이 메모를 삭제할까요?");
     if (!ok) return;
@@ -73,6 +124,35 @@ export default function NoteListPage() {
     } catch (error) {
       console.error(error);
       showToast("메모 삭제 실패");
+    }
+  };
+
+  const handlePinnedChange = async (
+    id: number,
+    isPinned: boolean,
+  ) => {
+    try {
+      await invoke("update_note", {
+        req: {
+          id,
+          is_pinned: isPinned,
+        },
+      });
+
+      if (isPinned) {
+        await invoke("open_sticky_window", {
+          noteId: id,
+        });
+      } else {
+        await invoke("close_sticky_window", {
+          noteId: id,
+        });
+      }
+
+      await fetchNotes();
+    } catch (error) {
+      console.error(error);
+      showToast("고정 상태 변경 실패");
     }
   };
 
@@ -211,6 +291,7 @@ export default function NoteListPage() {
                           className="btn text-start text-white flex-grow-1 p-0 border-0"
                         >
                           <h2 className="h5 fw-semibold text-truncate mb-2">
+                            {note.is_pinned && "📌 "}
                             {highlightText(note.title || "제목 없음")}
                           </h2>
 
@@ -226,6 +307,28 @@ export default function NoteListPage() {
                             수정일: {new Date(note.updated_at).toLocaleString()}
                           </p>
                         </button>
+
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id={`pin-${note.id}`}
+                            checked={note.is_pinned}
+                            onChange={(e) =>
+                              handlePinnedChange(
+                                note.id,
+                                e.target.checked,
+                              )
+                            }
+                          />
+
+                          <label
+                            className="form-check-label small"
+                            htmlFor={`pin-${note.id}`}
+                          >
+                            고정
+                          </label>
+                        </div>
 
                         <button
                           onClick={() => handleDelete(note.id)}

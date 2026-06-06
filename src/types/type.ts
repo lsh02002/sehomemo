@@ -12,6 +12,7 @@ export type NoteType = {
   title: string;
   folder_id: number;
   folder_name: string;
+  is_pinned: boolean;
   content: string;
   created_at: string;
   updated_at: string;

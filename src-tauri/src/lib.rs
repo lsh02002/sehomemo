@@ -41,11 +41,13 @@ pub fn run() {
             commands::note_commands::create_note,
             commands::note_commands::get_notes,
             commands::note_commands::get_notes_by_folder_id,
+            commands::note_commands::get_pinned_notes,
             commands::note_commands::get_notes_by_keyword,
             commands::note_commands::get_deleted_notes,
             commands::note_commands::get_one_note,
             commands::note_commands::restore_note,
             commands::note_commands::update_note,
+            commands::note_commands::update_note_silent,
             commands::note_commands::delete_note_softly,
             commands::note_commands::delete_note_permanently,
             commands::folder_commands::create_folder,
@@ -55,6 +57,11 @@ pub fn run() {
             commands::attachment_commands::get_attachments_by_note_id,
             commands::attachment_commands::create_attachment,
             commands::attachment_commands::delete_attachment,
+            commands::window_commands::open_manager_window,
+            commands::window_commands::open_empty_sticky_window,
+            commands::window_commands::open_sticky_window,
+            commands::window_commands::close_current_window,
+            commands::window_commands::close_sticky_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
