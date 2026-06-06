@@ -15,8 +15,13 @@ export default function NoteListPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchFolders = async () => {
-    const result = await invoke<FolderType[]>("get_folders");
-    setFolders(result);
+    try {
+      const result = await invoke<FolderType[]>("get_folders");
+      setFolders(result);
+    } catch (error) {
+      console.error(error);
+      showToast("폴더 목록을 불러우지 못했습니다.");
+    }
   };
 
   const fetchNotes = async () => {
