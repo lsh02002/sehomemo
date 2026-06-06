@@ -94,8 +94,14 @@ export default function NoteListPage() {
   return (
     <div className="min-vh-100 bg-dark text-white d-flex">
       <aside
-        className="border-end border-secondary p-3 bg-black"
-        style={{ width: 240, minWidth: 240, maxWidth: 240 }}
+        className="border-end border-secondary p-3 bg-black position-fixed"
+        style={{
+          width: 240,
+          height: "100%",
+          zIndex: 100,
+          minWidth: 240,
+          maxWidth: 240,
+        }}
       >
         <div className="d-flex align-items-center justify-content-between mb-3">
           <h2 className="mt-5 h6 fw-bold mb-0">폴더</h2>
@@ -136,7 +142,10 @@ export default function NoteListPage() {
         </div>
       </aside>
 
-      <div className="flex-grow-1 d-flex flex-column">
+      <div
+        className="flex-grow-1 d-flex flex-column"
+        style={{ marginLeft: 240 }}
+      >
         <header className="d-flex align-items-center justify-content-between border-bottom border-secondary px-4 py-3">
           <h1 className="h4 fw-bold mb-0">메모 목록</h1>
 
@@ -150,7 +159,7 @@ export default function NoteListPage() {
 
             <button
               onClick={() => navigate("/trash")}
-              className="btn btn-primary"
+              className="btn btn-danger"
             >
               휴지통
             </button>
@@ -180,7 +189,7 @@ export default function NoteListPage() {
           {loading ? (
             <p className="text-secondary">불러오는 중...</p>
           ) : notes.length === 0 ? (
-            <div className="d-flex h-100 align-items-center justify-content-center text-secondary">
+            <div className="d-flex align-items-center justify-content-center text-secondary">
               {keyword.trim() === ""
                 ? "아직 작성된 메모가 없습니다."
                 : "검색 결과가 없습니다."}
