@@ -1,6 +1,6 @@
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri::webview::Color;
-use crate::db::AppState;
+use crate::db::sqlite::AppState;
 use crate::services::note_service;
 
 #[tauri::command]

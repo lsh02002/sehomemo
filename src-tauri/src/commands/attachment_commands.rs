@@ -1,7 +1,7 @@
 use tauri::State;
 
 use crate::{
-    db::AppState,
+    db::sqlite::AppState,
     errors::AppResult,
     models::attachment::{Attachment, CreateAttachmentRequest},
     services::attachment_service,

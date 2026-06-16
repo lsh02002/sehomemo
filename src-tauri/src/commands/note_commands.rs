@@ -1,6 +1,6 @@
 use tauri::State;
 
-use crate::{db::AppState, errors::AppResult, models::note::{CreateNoteRequest, Note, UpdateNoteRequest}, services::note_service};
+use crate::{db::sqlite::AppState, errors::AppResult, models::note::{CreateNoteRequest, Note, UpdateNoteRequest}, services::note_service};
 
 #[tauri::command]
 pub async fn create_note(state: State<'_, AppState>, req: CreateNoteRequest) -> AppResult<Note> {

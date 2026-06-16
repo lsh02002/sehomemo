@@ -6,7 +6,7 @@ pub mod repositories;
 pub mod services;
 pub mod utils;
 
-use crate::db::AppState;
+use crate::db::sqlite::{AppState, init_db};
 use tauri::{Manager, WindowEvent};
 
 pub fn run() {
@@ -28,7 +28,7 @@ pub fn run() {
             );
 
             let pool = tauri::async_runtime::block_on(async {
-                db::init_db(&database_url)
+                init_db(&database_url)
                     .await
                     .expect("DB init failed")
             });

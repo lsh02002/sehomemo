@@ -1,6 +1,6 @@
 use tauri::State;
 
-use crate::{db::AppState, errors::AppResult, models::folder::{CreateFolderRequest, Folder}, services::folder_service};
+use crate::{db::sqlite::AppState, errors::AppResult, models::folder::{CreateFolderRequest, Folder}, services::folder_service};
 
 #[tauri::command]
 pub async fn create_folder(state: State<'_, AppState>, req: CreateFolderRequest) -> AppResult<Folder> {

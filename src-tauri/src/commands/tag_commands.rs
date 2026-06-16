@@ -1,6 +1,6 @@
 use tauri::State;
 
-use crate::{db::AppState, errors::AppResult, models::tag::{CreateTagRequest, Tag}, services::tag_service};
+use crate::{db::sqlite::AppState, errors::AppResult, models::tag::{CreateTagRequest, Tag}, services::tag_service};
 
 #[tauri::command]
 pub async fn create_tag(state: State<'_, AppState>, req: CreateTagRequest) -> AppResult<Tag> {
