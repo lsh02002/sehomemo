@@ -31,7 +31,8 @@ pub async fn open_manager_window(app: AppHandle) -> Result<(), String> {
 pub async fn open_empty_sticky_window(
     app: AppHandle,
 ) -> Result<(), String> {
-    if let Some(window) = app.get_webview_window("empty-sticky") {        
+    if let Some(window) = app.get_webview_window("empty-sticky") {
+        window.set_skip_taskbar(true).map_err(|e| e.to_string())?;
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
     }
@@ -63,6 +64,7 @@ pub async fn open_sticky_window(
     let url = format!("/#/sticky/{}", note_id);
 
     if let Some(window) = app.get_webview_window(&label) {
+        window.set_skip_taskbar(true).map_err(|e| e.to_string())?;
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
     }
@@ -164,6 +166,7 @@ pub async fn show_sticky_window(
     let label = format!("sticky-{}", note_id);
 
     if let Some(window) = app.get_webview_window(&label) {
+        window.set_skip_taskbar(true).map_err(|e| e.to_string())?;
         window.show().map_err(|e| e.to_string())?;
         window.set_focus().map_err(|e| e.to_string())?;
     }
