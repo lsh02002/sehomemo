@@ -198,19 +198,19 @@ pub async fn hide_sticky_window(
         window.hide().map_err(|e| e.to_string())?;        
     }
 
-    exit_if_no_visible_windows(&app);
+    // exit_if_no_visible_windows(&app);
 
     Ok(())
 }
 
-fn exit_if_no_visible_windows(app: &AppHandle) {
-    let has_visible_window = app
-        .webview_windows()
-        .values()
-        .any(|w| w.is_visible().unwrap_or(false));    
+// fn exit_if_no_visible_windows(app: &AppHandle) {
+//     let has_visible_window = app
+//         .webview_windows()
+//         .values()
+//         .any(|w| w.is_visible().unwrap_or(false));    
 
-    if !has_visible_window {
-        println!("{}", "종료됨");
-        app.exit(0);
-    }
-}
+//     if !has_visible_window {
+//         println!("{}", "종료됨");
+//         app.exit(0);
+//     }
+// }

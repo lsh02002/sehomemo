@@ -7,7 +7,7 @@ pub mod services;
 pub mod utils;
 
 use crate::db::sqlite::{AppState, init_db};
-use tauri::{Manager, WindowEvent};
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, menu::{Menu, MenuItem}, tray::TrayIconBuilder,};
 
 pub fn run() {
     tauri::Builder::default()
@@ -35,22 +35,41 @@ pub fn run() {
 
             app.manage(AppState { pool });
 
+            let manager = MenuItem::with_id(app, "manager", "메모 관리자 열기", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "종료", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&manager, &quit])?;
+            let icon = app.default_window_icon().unwrap().clone();
+
+            TrayIconBuilder::new()
+                .icon(icon)
+                .menu(&menu)
+                .show_menu_on_left_click(true)
+                .on_menu_event(|app, event| {
+                    match event.id().as_ref() {
+                        "manager" => {
+                            if let Some(win) = app.get_webview_window("manager") {
+                                let _ = win.show();
+                                let _ = win.unminimize();
+                                let _ = win.set_focus();
+                            } else {
+                                let _ = WebviewWindowBuilder::new(
+                                    app,
+                                    "manager",
+                                    WebviewUrl::App("/#/manager".into())
+                                )
+                                .title("메모 관리")
+                                .inner_size(1000.0, 700.0)
+                                .visible(true)
+                                .build();
+                            }
+                        }
+                        "quit" => app.exit(0),
+                        _ => {}
+                    }
+                })
+                .build(app)?;
+
             Ok(())
-        })
-        .on_window_event(|window, event| {
-            if matches!(event, WindowEvent::Destroyed) {
-                let app = window.app_handle();
-
-                let has_visible_window = app
-                    .webview_windows()
-                    .values()
-                    .any(|w| w.is_visible().unwrap_or(false));
-
-                if !has_visible_window {
-                    println!("{}", "종료됨");
-                    app.exit(0);
-                }
-            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::note_commands::create_note,
