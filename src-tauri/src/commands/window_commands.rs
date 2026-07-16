@@ -162,13 +162,20 @@ pub async fn preload_sticky_window(
 pub async fn show_sticky_window(
     app: AppHandle,
     note_id: i64,
+    focus: Option<bool>,
 ) -> Result<(), String> {
     let label = format!("sticky-{}", note_id);
 
     if let Some(window) = app.get_webview_window(&label) {
-        window.set_skip_taskbar(true).map_err(|e| e.to_string())?;
+        window
+            .set_skip_taskbar(true)
+            .map_err(|e| e.to_string())?;
+
         window.show().map_err(|e| e.to_string())?;
-        window.set_focus().map_err(|e| e.to_string())?;
+
+        if focus.unwrap_or(false) {
+            window.set_focus().map_err(|e| e.to_string())?;
+        }
     }
 
     Ok(())

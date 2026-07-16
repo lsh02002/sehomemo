@@ -25,6 +25,7 @@ export default function StickyHomePage() {
             pinnedNotes.map((note) =>
               invoke("show_sticky_window", {
                 noteId: note.id,
+                force: true, // 검색 중이 아닐 때만 스티키 창을 강제로 표시
               }),
             ),
           );

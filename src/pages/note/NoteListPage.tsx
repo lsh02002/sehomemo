@@ -30,17 +30,17 @@ export default function NoteListPage() {
       setLoading(true);
 
       const trimmedKeyword = keyword.trim();
+      const isSearching = trimmedKeyword !== "";
 
-      let result =
-        trimmedKeyword !== ""
-          ? await invoke<NoteType[]>("get_notes_by_keyword", {
-              keyword: trimmedKeyword,
+      let result = isSearching
+        ? await invoke<NoteType[]>("get_notes_by_keyword", {
+            keyword: trimmedKeyword,
+          })
+        : selectedFolderId !== null
+          ? await invoke<NoteType[]>("get_notes_by_folder_id", {
+              id: selectedFolderId,
             })
-          : selectedFolderId !== null
-            ? await invoke<NoteType[]>("get_notes_by_folder_id", {
-                id: selectedFolderId,
-              })
-            : await invoke<NoteType[]>("get_notes");
+          : await invoke<NoteType[]>("get_notes");
 
       if (selectedFolderId !== null) {
         result = result.filter((note) => note.folder_id === selectedFolderId);
@@ -48,22 +48,25 @@ export default function NoteListPage() {
 
       const pinnedNotes = result.filter((note) => note.is_pinned);
 
-      // 스티키 창 미리 생성
-      await Promise.all(
-        pinnedNotes.map((note) =>
-          invoke("preload_sticky_window", {
-            noteId: note.id,
-          }),
-        ),
-      );
+      // 검색 중에는 스티키 창을 생성하거나 표시하지 않음
+      if (!isSearching) {
+        await Promise.all(
+          pinnedNotes.map((note) =>
+            invoke("preload_sticky_window", {
+              noteId: note.id,
+            }),
+          ),
+        );
 
-      await Promise.all(
-        pinnedNotes.map((note) =>
-          invoke("show_sticky_window", {
-            noteId: note.id,
-          }),
-        ),
-      );
+        await Promise.all(
+          pinnedNotes.map((note) =>
+            invoke("show_sticky_window", {
+              noteId: note.id,
+              force: false, // 검색 중이 아닐 때만 스티키 창을 강제로 표시
+            }),
+          ),
+        );
+      }
 
       setNotes(result);
     } catch (error) {
